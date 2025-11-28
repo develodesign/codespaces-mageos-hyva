@@ -5,7 +5,7 @@ set -eu
 # ======================================================================================
 # Environment and Service Configuration
 # ======================================================================================
-USE_MAGEOS="${USE_MAGEOS:=YES}"
+PLATFORM_NAME="${PLATFORM_NAME:=mage-os}"
 INSTALL_MAGENTO="${INSTALL_MAGENTO:=YES}"
 INSTALL_SAMPLE_DATA="${INSTALL_SAMPLE_DATA:=YES}"
 HYVA_LICENCE_KEY="${HYVA_LICENCE_KEY:=}"
@@ -26,15 +26,8 @@ show_ready_message() {
   echo "All services started successfully!"
   echo "You can check service status with: .devcontainer/scripts/status.sh"
   echo "And Docker containers with: docker ps"
-  echo "Have an awesome time! 💙 Develo.co.uk"
+  echo "Have an awesome time! ❤️ Develo.co.uk"
 }
-
-# Determine platform name for display
-if [ "${USE_MAGEOS}" = "YES" ]; then
-  PLATFORM_NAME="mage-os"
-else
-  PLATFORM_NAME="magento"
-fi
 
 # ======================================================================================
 # Supervisor Services (Nginx, MariaDB, Redis)
@@ -90,10 +83,10 @@ else
         TEMP_DIR=$(mktemp -d)
         echo "Using temporary directory: ${TEMP_DIR}"
 
-        if [ "${USE_MAGEOS}" = "YES" ]; then
+        if [ "${PLATFORM_NAME}" = "mage-os" ]; then
             echo "Installing Mage-OS from https://repo.mage-os.org/"
             ${COMPOSER_COMMAND} create-project --repository-url=https://repo.mage-os.org/ mage-os/project-community-edition ${TEMP_DIR} --no-interaction
-        else
+        elif [ "${PLATFORM_NAME}" = "magento" ]; then
             echo "Installing Magento from https://repo.magento.com/"
             if [ -n "${MAGENTO_COMPOSER_AUTH_USER}" ] && [ -n "${MAGENTO_COMPOSER_AUTH_PASS}" ]; then
                 ${COMPOSER_COMMAND} config --global http-basic.repo.magento.com ${MAGENTO_COMPOSER_AUTH_USER} ${MAGENTO_COMPOSER_AUTH_PASS}
@@ -129,7 +122,7 @@ else
     # Install Sample Data if enabled
     if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
         echo "============ Installing Sample Data =========="
-        if [ "${USE_MAGEOS}" = "YES" ]; then
+        if [ "${PLATFORM_NAME}" = "mage-os" ]; then
             echo "**** Deploying Mage-OS sample data ****"
             # Mage-OS uses the same sample data as Magento
             ${COMPOSER_COMMAND} require mage-os/module-bundle-sample-data mage-os/module-widget-sample-data mage-os/module-theme-sample-data mage-os/module-catalog-sample-data mage-os/module-customer-sample-data mage-os/module-cms-sample-data mage-os/module-catalog-rule-sample-data mage-os/module-sales-rule-sample-data mage-os/module-review-sample-data mage-os/module-tax-sample-data mage-os/module-sales-sample-data mage-os/module-grouped-product-sample-data mage-os/module-downloadable-sample-data mage-os/module-msrp-sample-data mage-os/module-configurable-sample-data mage-os/module-product-links-sample-data mage-os/module-wishlist-sample-data mage-os/module-swatches-sample-data --no-update
@@ -235,8 +228,6 @@ fi;
   # unzip -o ${CODESPACES_REPO_ROOT}/bam_media.zip -d ${CODESPACES_REPO_ROOT}/pub/ && rm ./bam_media.zip
 fi
 
-show_ready_message
-
 touch "${CODESPACES_REPO_ROOT}/.devcontainer/db-installed.flag"
 
 if [ "${HYVA_LICENCE_KEY}" ]; then
@@ -291,7 +282,7 @@ fi;
 # ======================================================================================
 # Fix for missing sample data media files
 # ======================================================================================
-if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
+if [ "${INSTALL_SAMPLE_DATA}" = "YES" ] && [ "${PLATFORM_NAME}" = "mage-os" ]; then
     SAMPLE_MEDIA_SOURCE="vendor/mage-os/sample-data-media"
     MEDIA_DEST="pub/media"
 
