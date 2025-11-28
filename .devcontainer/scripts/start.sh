@@ -26,7 +26,7 @@ show_ready_message() {
   echo "All services started successfully!"
   echo "You can check service status with: .devcontainer/scripts/status.sh"
   echo "And Docker containers with: docker ps"
-  echo "Have an awesome time! ❤️ Develo.co.uk"
+  echo "Have an awesome time! 💙 Develo.co.uk"
 }
 
 # ======================================================================================
@@ -179,7 +179,7 @@ else
       php -d memory_limit=-1 bin/magento setup:upgrade
     fi
 
-    if [ "${HYVA_LICENCE_KEY+x}" ]; then
+    if [ "${HYVA_LICENCE_KEY}" ]; then
         echo "**** Configuring Hyvä Theme ****"
         ${COMPOSER_COMMAND} config --auth http-basic.hyva-themes.repo.packagist.com token ${HYVA_LICENCE_KEY}
         ${COMPOSER_COMMAND} config repositories.private-packagist composer https://hyva-themes.repo.packagist.com/${HYVA_PROJECT_NAME}/
@@ -301,14 +301,4 @@ if [ "${INSTALL_SAMPLE_DATA}" = "YES" ] && [ "${PLATFORM_NAME}" = "mage-os" ]; t
     fi
 fi
 
-
-# ======================================================================================
-# Environment Ready Message
-# ======================================================================================
-show_ready_message() {
-  echo "============ Environment Ready =========="
-  echo "All services started successfully!"
-  echo "You can check service status with: .devcontainer/scripts/status.sh"
-  echo "And Docker containers with: docker ps"
-  echo "Have an awesome time! 💙 Develo.co.uk"
-}
+show_ready_message
