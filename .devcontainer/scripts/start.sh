@@ -289,13 +289,6 @@ if [ "${INSTALL_SAMPLE_DATA}" = "YES" ] && [ "${PLATFORM_NAME}" = "mage-os" ]; t
     if [ -d "$SAMPLE_MEDIA_SOURCE" ] && [ -w "$MEDIA_DEST" ]; then
         echo "Found sample data media. Copying to pub/media..."
         rsync -a "${SAMPLE_MEDIA_SOURCE}/" "${MEDIA_DEST}/"
-        
-        if [ -f "bin/magento" ]; then
-            echo "Resizing product images and flushing cache..."
-            php -d memory_limit=-1 bin/magento catalog:image:resize
-            php -d memory_limit=-1 bin/magento cache:flush
-            echo "Sample data media fix applied."
-        fi
     else
         echo "Sample data media source not found or pub/media not writable. Skipping fix."
     fi
