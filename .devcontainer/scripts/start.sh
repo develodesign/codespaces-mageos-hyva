@@ -5,7 +5,7 @@ set -eu
 # ======================================================================================
 # Environment and Service Configuration
 # ======================================================================================
-PLATFORM_NAME="${PLATFORM_NAME:=mage-os}"
+PLATFORM_NAME="${PLATFORM_NAME:=mage-os}" # Options: mage-os, magento
 INSTALL_MAGENTO="${INSTALL_MAGENTO:=YES}"
 INSTALL_SAMPLE_DATA="${INSTALL_SAMPLE_DATA:=YES}"
 HYVA_LICENCE_KEY="${HYVA_LICENCE_KEY:=}"
