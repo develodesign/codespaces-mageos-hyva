@@ -41,7 +41,9 @@
     "mage-os/module-wishlist-sample-data": "2.2.1",
     "mage-os/product-community-edition": "2.2.1",
     "mage-os/sample-data-media": "2.2.1",
-    "smile/elasticsuite": "~2.11"
+    "smile/elasticsuite": "~2.11",
+    "snowdog/module-menu": "^2.29",
+    "techyouknow/module-social-login": "^1.0"
   },
   "require-dev": {
     "mage-os/magento-allure-phpunit": "2.2.1",

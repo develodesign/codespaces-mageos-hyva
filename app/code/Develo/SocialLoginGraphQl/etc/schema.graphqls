@@ -1,0 +1,65 @@
+type Query {
+    socialLoginProviders: SocialLoginProvidersOutput
+        @resolver(class: "Develo\\SocialLoginGraphQl\\Model\\Resolver\\SocialLoginProviders")
+        @doc(description: "Returns enabled social login providers with client IDs for JS SDK initialisation.")
+        @cache(cacheable: false)
+}
+
+type Mutation {
+    socialLoginWithToken(
+        provider: SocialLoginProvider!
+            @doc(description: "The social network provider.")
+        token: String!
+            @doc(description: "ID token or access token issued by the provider JS SDK (Google, Facebook, GitHub, Apple).")
+    ): SocialLoginOutput
+        @resolver(class: "Develo\\SocialLoginGraphQl\\Model\\Resolver\\SocialLoginWithToken")
+        @doc(description: "Authenticate via a client-side provider token. Returns a Magento customer bearer token.")
+        @cache(cacheable: false)
+
+    socialLoginWithCode(
+        provider: SocialLoginProvider!
+            @doc(description: "The social network provider.")
+        code: String!
+            @doc(description: "OAuth 2.0 authorisation code from the provider redirect callback.")
+        redirect_uri: String!
+            @doc(description: "Redirect URI used in the original authorisation request (must match provider registration).")
+    ): SocialLoginOutput
+        @resolver(class: "Develo\\SocialLoginGraphQl\\Model\\Resolver\\SocialLoginWithCode")
+        @doc(description: "Authenticate via an OAuth authorisation code (Twitter, LinkedIn, Amazon, Yahoo, Instagram). Returns a Magento customer bearer token.")
+        @cache(cacheable: false)
+}
+
+enum SocialLoginProvider @doc(description: "Supported social login providers.") {
+    GOOGLE
+    FACEBOOK
+    APPLE
+    GITHUB
+    TWITTER
+    LINKEDIN
+    AMAZON
+    YAHOO
+    INSTAGRAM
+}
+
+type SocialLoginOutput @doc(description: "Result of a social login or registration.") {
+    token: String!
+        @doc(description: "Magento customer bearer token. Use as: Authorization: Bearer <token>.")
+    is_new_customer: Boolean!
+        @doc(description: "True when a new Magento customer account was created during this request.")
+    customer_email: String!
+        @doc(description: "Email address of the authenticated customer.")
+}
+
+type SocialLoginProvidersOutput @doc(description: "List of enabled social login providers.") {
+    providers: [SocialLoginProviderConfig!]!
+        @doc(description: "Enabled providers with client IDs.")
+}
+
+type SocialLoginProviderConfig @doc(description: "Configuration for a single social login provider.") {
+    provider: SocialLoginProvider!
+        @doc(description: "Provider identifier.")
+    client_id: String!
+        @doc(description: "OAuth client ID for JS SDK initialisation.")
+    is_token_flow: Boolean!
+        @doc(description: "True if the provider supports client-side token flow (JS SDK). False if redirect/code flow is required.")
+}

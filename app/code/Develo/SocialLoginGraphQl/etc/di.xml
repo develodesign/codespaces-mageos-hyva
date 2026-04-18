@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--
+        Provide stub implementations for Magento Commerce (EE) Reward module classes
+        that Techyouknow_SocialLogin depends on. These stubs are no-ops on Community Edition.
+    -->
+    <preference for="Magento\Reward\Model\RewardFactory"
+                type="Develo\SocialLoginGraphQl\Model\Stub\RewardFactory"/>
+    <preference for="Magento\Reward\Helper\Data"
+                type="Develo\SocialLoginGraphQl\Model\Stub\RewardData"/>
+</config>

@@ -1,0 +1,19 @@
+{
+    "name": "develo/module-social-login-graphql",
+    "description": "GraphQL API layer for Techyouknow social login — headless Daffodil storefront integration",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "require": {
+        "php": ">=8.3",
+        "techyouknow/module-social-login": "*",
+        "magento/module-customer-graph-ql": "*",
+        "magento/module-integration": "*",
+        "magento/framework": "*"
+    },
+    "autoload": {
+        "files": ["registration.php"],
+        "psr-4": {
+            "Develo\\SocialLoginGraphQl\\": ""
+        }
+    }
+}

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8b5abd5456a3655117d9ffd91b6205e8",
+    "content-hash": "df6040dd234509ad77ce26ec7b47b289",
     "packages": [
         {
             "name": "2tvenom/cborencode",
@@ -2002,16 +2002,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v7.0.5",
+            "version": "v6.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/php-jwt.git",
-                "reference": "47ad26bab5e7c70ae8a6f08ed25ff83631121380"
+                "reference": "d1e91ecf8c598d073d0995afa8cd5c75c6e19e66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/php-jwt/zipball/47ad26bab5e7c70ae8a6f08ed25ff83631121380",
-                "reference": "47ad26bab5e7c70ae8a6f08ed25ff83631121380",
+                "url": "https://api.github.com/repos/googleapis/php-jwt/zipball/d1e91ecf8c598d073d0995afa8cd5c75c6e19e66",
+                "reference": "d1e91ecf8c598d073d0995afa8cd5c75c6e19e66",
                 "shasum": ""
             },
             "require": {
@@ -2019,7 +2019,6 @@
             },
             "require-dev": {
                 "guzzlehttp/guzzle": "^7.4",
-                "phpfastcache/phpfastcache": "^9.2",
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.5",
                 "psr/cache": "^2.0||^3.0",
@@ -2060,9 +2059,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/php-jwt/issues",
-                "source": "https://github.com/googleapis/php-jwt/tree/v7.0.5"
+                "source": "https://github.com/googleapis/php-jwt/tree/v6.11.1"
             },
-            "time": "2026-04-01T20:38:03+00:00"
+            "time": "2025-04-09T20:32:01+00:00"
         },
         {
             "name": "google-gemini-php/client",
@@ -2572,6 +2571,68 @@
                 }
             ],
             "time": "2026-03-10T16:41:02+00:00"
+        },
+        {
+            "name": "hybridauth/hybridauth",
+            "version": "v3.13.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hybridauth/hybridauth.git",
+                "reference": "5f799ed5fd35e21f06cf42310f9f6ed3f7bbe7df"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hybridauth/hybridauth/zipball/5f799ed5fd35e21f06cf42310f9f6ed3f7bbe7df",
+                "reference": "5f799ed5fd35e21f06cf42310f9f6ed3f7bbe7df",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.4 || ^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "phpunit/phpunit": "^4.8.35 || ^6.5 || ^8.0 || ^12.0"
+            },
+            "suggest": {
+                "firebase/php-jwt": "Needed to support Apple provider",
+                "phpseclib/phpseclib": "Needed to support Apple provider"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Hybridauth\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Miled",
+                    "email": "hybridauth@gmail.com"
+                }
+            ],
+            "description": "PHP Social Authentication Library",
+            "homepage": "https://hybridauth.github.io",
+            "keywords": [
+                "Authentication",
+                "OpenId",
+                "api",
+                "apple",
+                "authorization",
+                "facebook",
+                "google",
+                "oauth",
+                "social",
+                "twitter"
+            ],
+            "support": {
+                "gitter": "https://gitter.im/hybridauth/hybridauth",
+                "issues": "https://github.com/hybridauth/hybridauth/issues",
+                "source": "https://github.com/hybridauth/hybridauth/tree/v3.13.0"
+            },
+            "time": "2026-04-02T19:11:26+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
@@ -22507,6 +22568,59 @@
             "time": "2026-03-25T14:05:47+00:00"
         },
         {
+            "name": "snowdog/module-menu",
+            "version": "2.29.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SnowdogApps/magento2-menu.git",
+                "reference": "f7bb102a2034230daa0334bc811bfdda3630425b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SnowdogApps/magento2-menu/zipball/f7bb102a2034230daa0334bc811bfdda3630425b",
+                "reference": "f7bb102a2034230daa0334bc811bfdda3630425b",
+                "shasum": ""
+            },
+            "require": {
+                "magento/framework": "100.1.*|101.0.*|102.0.*|103.0.*",
+                "magento/module-backend": "100.1.*|100.2.*|101.0.*|102.0.*",
+                "magento/module-catalog": "101.0.*|102.0.*|103.0.*|104.0.*",
+                "magento/module-cms": "101.0.*|102.0.*|103.0.*|104.0.*",
+                "magento/module-graph-ql": "100.3.*|100.4.*",
+                "magento/module-import-export": "100.3.*|101.0.*",
+                "magento/module-media-storage": "100.3.*|100.4.*",
+                "symfony/yaml": ">=3.2"
+            },
+            "require-dev": {
+                "magento/magento-coding-standard": "^5.0"
+            },
+            "type": "magento2-module",
+            "autoload": {
+                "files": [
+                    "registration.php"
+                ],
+                "psr-4": {
+                    "Snowdog\\Menu\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kamil Balwierz",
+                    "email": "kamil@snow.dog"
+                }
+            ],
+            "description": "Provides powerful menu editor to replace category based menus in Magento 2",
+            "support": {
+                "issues": "https://github.com/SnowdogApps/magento2-menu/issues",
+                "source": "https://github.com/SnowdogApps/magento2-menu/tree/2.29.0"
+            },
+            "time": "2025-07-09T10:16:39+00:00"
+        },
+        {
             "name": "spatie/dropbox-api",
             "version": "1.24.0",
             "source": {
@@ -25724,6 +25838,67 @@
                 }
             ],
             "time": "2026-03-24T13:12:05+00:00"
+        },
+        {
+            "name": "techyouknow/module-social-login",
+            "version": "1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/techyouknow/magento2-social-login.git",
+                "reference": "dbd61e292480946e99fb6c59dba6630982788dfa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/techyouknow/magento2-social-login/zipball/dbd61e292480946e99fb6c59dba6630982788dfa",
+                "reference": "dbd61e292480946e99fb6c59dba6630982788dfa",
+                "shasum": ""
+            },
+            "require": {
+                "firebase/php-jwt": "~6.0",
+                "hybridauth/hybridauth": "~3.0",
+                "php": ">=7.3"
+            },
+            "type": "magento2-module",
+            "autoload": {
+                "files": [
+                    "registration.php"
+                ],
+                "psr-4": {
+                    "Techyouknow\\SocialLogin\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "TechYouKnow",
+                    "role": "Owner"
+                },
+                {
+                    "name": "Amjad M",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Magento 2 social login like Google, Facebook, Apple, Instagram, Twitter, Amazon, Yahoo, LinkedIn, and GitHub",
+            "keywords": [
+                "Authentication",
+                "OpenId",
+                "api",
+                "apple",
+                "authorization",
+                "facebook",
+                "google",
+                "oauth",
+                "social",
+                "twitter"
+            ],
+            "support": {
+                "issues": "https://github.com/techyouknow/magento2-social-login/issues",
+                "source": "https://github.com/techyouknow/magento2-social-login/tree/v1.0.4"
+            },
+            "time": "2024-12-31T17:02:17+00:00"
         },
         {
             "name": "tedivm/jshrink",

@@ -289,6 +289,7 @@ return [
         'Magento_ReviewAnalytics' => 1,
         'Magento_ReviewGraphQl' => 1,
         'Magento_ConfigurableSampleData' => 1,
+        'Magento_Reward' => 1,
         'Magento_AwsS3' => 1,
         'Magento_Rss' => 1,
         'Magento_PageBuilderAdminAnalytics' => 1,
@@ -351,6 +352,8 @@ return [
         'Aligent_Pci4Compatibility' => 1,
         'Creatuity_Interception' => 1,
         'Smile_ElasticsuiteCore' => 1,
+        'Snowdog_Menu' => 1,
+        'Techyouknow_SocialLogin' => 1,
         'Graycore_Cors' => 1,
         'MageOS_AutomaticTranslation' => 1,
         'MageOS_InventoryReservationsGrid' => 1,
@@ -370,6 +373,8 @@ return [
         'Smile_ElasticsuiteSwatches' => 1,
         'Develo_ElasticSuiteGraphQl' => 1,
         'Smile_ElasticsuiteAnalytics' => 1,
-        'Smile_ElasticsuiteVirtualCategory' => 1
+        'Smile_ElasticsuiteVirtualCategory' => 1,
+        'Develo_SnowdogMenuGraphQlExtension' => 1,
+        'Develo_SocialLoginGraphQl' => 1
     ]
 ];
