@@ -187,6 +187,9 @@ dump.rdb
 # Custom Development Files
 # ============================================
 
+# Git worktrees
+/.worktrees/
+
 # Custom modules in app/code/ will be tracked
 # Custom themes in app/design/ will be tracked
 # Custom translations in app/i18n/ will be tracked
