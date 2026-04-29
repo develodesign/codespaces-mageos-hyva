@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <stripe_payments>
+                <active>0</active>
+                <model>Develo\StripePayments\Model\Payment\StripePayments</model>
+                <order_status>pending</order_status>
+                <title>Credit / Debit Card (Stripe)</title>
+                <allowspecific>0</allowspecific>
+                <group>online</group>
+                <publishable_key/>
+                <secret_key/>
+            </stripe_payments>
+        </payment>
+    </default>
+</config>
