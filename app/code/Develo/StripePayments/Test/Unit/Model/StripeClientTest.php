@@ -59,4 +59,26 @@ class StripeClientTest extends TestCase
 
         $this->assertFalse($this->stripeClient->isConfigured());
     }
+
+    public function testGetClientReturnsStripeClientInstance(): void
+    {
+        $this->scopeConfig->method('getValue')
+            ->with('payment/stripe_payments/secret_key', ScopeInterface::SCOPE_STORE)
+            ->willReturn('sk_test_fake_key_for_testing');
+
+        $client = $this->stripeClient->getClient();
+
+        $this->assertInstanceOf(\Stripe\StripeClient::class, $client);
+    }
+
+    public function testIsConfiguredReturnsFalseWhenPublishableKeyMissing(): void
+    {
+        $this->scopeConfig->method('getValue')
+            ->willReturnMap([
+                ['payment/stripe_payments/publishable_key', ScopeInterface::SCOPE_STORE, null, ''],
+                ['payment/stripe_payments/secret_key', ScopeInterface::SCOPE_STORE, null, 'sk_test_xyz'],
+            ]);
+
+        $this->assertFalse($this->stripeClient->isConfigured());
+    }
 }

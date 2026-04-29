@@ -9,7 +9,7 @@ type Mutation {
     createStripePaymentIntent(
         cart_id: String!
             @doc(description: "The masked cart ID.")
-    ): StripePaymentIntentOutput!
+    ): DeveloStripePaymentIntentOutput!
         @resolver(class: "Develo\\StripePayments\\Model\\Resolver\\CreateStripePaymentIntent")
         @doc(description: "Creates a Stripe PaymentIntent for the cart total and returns the client_secret for Stripe.js.")
         @cache(cacheable: false)
@@ -19,16 +19,16 @@ type Mutation {
             @doc(description: "The masked cart ID.")
         payment_intent_id: String!
             @doc(description: "The Stripe PaymentIntent ID (pi_...) confirmed by Stripe.js on the frontend.")
-    ): PlaceStripeOrderOutput!
+    ): DeveloPlaceStripeOrderOutput!
         @resolver(class: "Develo\\StripePayments\\Model\\Resolver\\PlaceStripeOrder")
         @doc(description: "Verifies the Stripe PaymentIntent and places the Magento order.")
         @cache(cacheable: false)
 }
 
-type StripePaymentIntentOutput {
+type DeveloStripePaymentIntentOutput {
     client_secret: String! @doc(description: "The Stripe PaymentIntent client_secret for use with stripe.confirmCardPayment().")
 }
 
-type PlaceStripeOrderOutput {
+type DeveloPlaceStripeOrderOutput {
     order_number: String! @doc(description: "The Magento order increment ID.")
 }

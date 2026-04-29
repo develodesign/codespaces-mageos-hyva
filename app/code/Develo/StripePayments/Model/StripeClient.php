@@ -9,6 +9,8 @@ use Stripe\StripeClient as BaseStripeClient;
 
 class StripeClient
 {
+    private ?BaseStripeClient $client = null;
+
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
     ) {
@@ -37,6 +39,6 @@ class StripeClient
 
     public function getClient(): BaseStripeClient
     {
-        return new BaseStripeClient($this->getSecretKey());
+        return $this->client ??= new BaseStripeClient($this->getSecretKey());
     }
 }
