@@ -29,8 +29,12 @@ class CreateStripePaymentIntent implements ResolverInterface
             throw new GraphQlInputException(__('cart_id is required.'));
         }
 
-        $quoteId = $this->maskedQuoteIdToQuoteId->execute($maskedId);
-        $quote   = $this->cartRepository->get($quoteId);
+        try {
+            $quoteId = $this->maskedQuoteIdToQuoteId->execute($maskedId);
+            $quote   = $this->cartRepository->get($quoteId);
+        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+            throw new GraphQlNoSuchEntityException(__('Could not find a cart with ID "%1".', $maskedId));
+        }
 
         $customerId = (int) $context->getUserId();
         $userType   = $context->getUserType();

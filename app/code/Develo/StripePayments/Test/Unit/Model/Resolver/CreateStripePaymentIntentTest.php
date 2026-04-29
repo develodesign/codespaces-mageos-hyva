@@ -8,6 +8,7 @@ use Develo\StripePayments\Model\StripeClient;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
+use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
@@ -57,6 +58,27 @@ class CreateStripePaymentIntentTest extends TestCase
             $this->createMock(ResolveInfo::class),
             [],
             ['cart_id' => '']
+        );
+    }
+
+    public function testResolveThrowsWhenCartNotFound(): void
+    {
+        $this->maskedQuoteIdToQuoteId->method('execute')
+            ->with('bad_cart_id')
+            ->willThrowException(new \Magento\Framework\Exception\NoSuchEntityException());
+
+        $context = $this->createMock(\Magento\GraphQl\Model\Query\ContextInterface::class);
+        $context->method('getUserType')->willReturn(UserContextInterface::USER_TYPE_GUEST);
+        $context->method('getUserId')->willReturn(0);
+
+        $this->expectException(GraphQlNoSuchEntityException::class);
+
+        $this->resolver->resolve(
+            $this->createMock(Field::class),
+            $context,
+            $this->createMock(ResolveInfo::class),
+            [],
+            ['cart_id' => 'bad_cart_id']
         );
     }
 

@@ -28,8 +28,8 @@ class PlaceStripeOrder implements ResolverInterface
 
     public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null): array
     {
-        $maskedId        = trim((string) (($args ?? [])['cart_id'] ?? ''));
-        $paymentIntentId = trim((string) (($args ?? [])['payment_intent_id'] ?? ''));
+        $maskedId        = trim((string) ($args['cart_id'] ?? ''));
+        $paymentIntentId = trim((string) ($args['payment_intent_id'] ?? ''));
 
         if ($maskedId === '') {
             throw new GraphQlInputException(__('cart_id is required.'));
@@ -48,8 +48,12 @@ class PlaceStripeOrder implements ResolverInterface
             throw new GraphQlInputException(__('Payment has not been confirmed. Status: %1', $intent->status));
         }
 
-        $quoteId = $this->maskedQuoteIdToQuoteId->execute($maskedId);
-        $quote   = $this->cartRepository->get($quoteId);
+        try {
+            $quoteId = $this->maskedQuoteIdToQuoteId->execute($maskedId);
+            $quote   = $this->cartRepository->get($quoteId);
+        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+            throw new GraphQlNoSuchEntityException(__('Could not find a cart with ID "%1".', $maskedId));
+        }
 
         $customerId = (int) $context->getUserId();
         $userType   = $context->getUserType();
@@ -60,8 +64,15 @@ class PlaceStripeOrder implements ResolverInterface
         }
 
         $quote->getPayment()->setMethod('stripe_payments');
+        $quote->getPayment()->setAdditionalInformation('stripe_payment_intent_id', $paymentIntentId);
 
-        $orderId = $this->cartManagement->placeOrder($quoteId);
+        try {
+            $orderId = $this->cartManagement->placeOrder($quoteId);
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+            throw new GraphQlInputException(__($e->getMessage()));
+        } catch (\Throwable $e) {
+            throw new GraphQlInputException(__('Unable to place order. Please try again.'));
+        }
         $order   = $this->orderRepository->get($orderId);
 
         return ['order_number' => $order->getIncrementId()];

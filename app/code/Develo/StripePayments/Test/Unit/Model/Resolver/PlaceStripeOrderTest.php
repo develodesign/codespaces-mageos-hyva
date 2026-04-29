@@ -8,6 +8,7 @@ use Develo\StripePayments\Model\StripeClient;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
+use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -155,5 +156,101 @@ class PlaceStripeOrderTest extends TestCase
         );
 
         $this->assertSame(['order_number' => '000000099'], $result);
+    }
+
+    public function testResolveThrowsWhenCartIdMissing(): void
+    {
+        $this->expectException(GraphQlInputException::class);
+        $this->expectExceptionMessage('cart_id is required');
+
+        $this->resolver->resolve(
+            $this->createMock(Field::class),
+            $this->makeGuestContext(),
+            $this->createMock(ResolveInfo::class),
+            [],
+            ['cart_id' => '', 'payment_intent_id' => 'pi_test_123']
+        );
+    }
+
+    public function testResolveThrowsWhenCartNotFound(): void
+    {
+        $paymentIntentService = $this->getMockBuilder(PaymentIntentService::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['retrieve'])
+            ->getMock();
+
+        $paymentIntent = $this->getMockBuilder(PaymentIntent::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['__get'])
+            ->getMock();
+        $paymentIntent->method('__get')->with('status')->willReturn('succeeded');
+        $paymentIntentService->method('retrieve')->willReturn($paymentIntent);
+
+        $baseClient = $this->getMockBuilder(BaseStripeClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['__get'])
+            ->getMock();
+        $baseClient->method('__get')->with('paymentIntents')->willReturn($paymentIntentService);
+        $this->stripeClient->method('getClient')->willReturn($baseClient);
+
+        $this->maskedQuoteIdToQuoteId->method('execute')
+            ->with('bad_cart_id')
+            ->willThrowException(new \Magento\Framework\Exception\NoSuchEntityException());
+
+        $this->expectException(GraphQlNoSuchEntityException::class);
+
+        $this->resolver->resolve(
+            $this->createMock(Field::class),
+            $this->makeGuestContext(),
+            $this->createMock(ResolveInfo::class),
+            [],
+            ['cart_id' => 'bad_cart_id', 'payment_intent_id' => 'pi_test_123']
+        );
+    }
+
+    public function testResolveThrowsWhenCustomerDoesNotOwnCart(): void
+    {
+        $paymentIntentService = $this->getMockBuilder(PaymentIntentService::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['retrieve'])
+            ->getMock();
+
+        $paymentIntent = $this->getMockBuilder(PaymentIntent::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['__get'])
+            ->getMock();
+        $paymentIntent->method('__get')->with('status')->willReturn('succeeded');
+        $paymentIntentService->method('retrieve')->willReturn($paymentIntent);
+
+        $baseClient = $this->getMockBuilder(BaseStripeClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['__get'])
+            ->getMock();
+        $baseClient->method('__get')->with('paymentIntents')->willReturn($paymentIntentService);
+        $this->stripeClient->method('getClient')->willReturn($baseClient);
+
+        $this->maskedQuoteIdToQuoteId->method('execute')->with('masked123')->willReturn(42);
+
+        $quote = $this->getMockBuilder(Quote::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getCustomerId'])
+            ->onlyMethods(['getPayment'])
+            ->getMock();
+        $quote->method('getCustomerId')->willReturn(99); // different customer
+        $this->cartRepository->method('get')->with(42)->willReturn($quote);
+
+        $context = $this->createMock(\Magento\GraphQl\Model\Query\ContextInterface::class);
+        $context->method('getUserType')->willReturn(UserContextInterface::USER_TYPE_CUSTOMER);
+        $context->method('getUserId')->willReturn(1); // logged in as customer 1
+
+        $this->expectException(GraphQlNoSuchEntityException::class);
+
+        $this->resolver->resolve(
+            $this->createMock(Field::class),
+            $context,
+            $this->createMock(ResolveInfo::class),
+            [],
+            ['cart_id' => 'masked123', 'payment_intent_id' => 'pi_test_123']
+        );
     }
 }
