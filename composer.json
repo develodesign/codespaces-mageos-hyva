@@ -43,6 +43,7 @@
     "mage-os/sample-data-media": "2.2.1",
     "smile/elasticsuite": "~2.11",
     "snowdog/module-menu": "^2.29",
+    "stripe/stripe-php": "^13.0",
     "techyouknow/module-social-login": "^1.0",
     "typesense/typesense-php": "^6.0"
   },
