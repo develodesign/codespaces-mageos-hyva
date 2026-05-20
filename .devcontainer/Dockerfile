@@ -1,5 +1,6 @@
 # Use the "bookworm" based PHP image
-FROM php:8.4-fpm-bookworm
+# PHP 8.5 is supported by Mage-OS 3.0.0 / Magento 2.4.9 (framework requires ~8.3 || ~8.4 || ~8.5)
+FROM php:8.5-fpm-bookworm
 
 # Environment variables to allow non-interactive installation
 ENV MYSQL_ROOT_PASSWORD=password
@@ -71,7 +72,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-x
         ftp \
         xsl
 
-# Install imagick from source (PECL package incompatible with PHP 8.4)
+# Install imagick from source (builds cleanly against current PHP; the released
+# PECL tarball has historically lagged new PHP versions)
 RUN git clone https://github.com/Imagick/imagick --depth 1 /tmp/imagick && \
     cd /tmp/imagick && phpize && ./configure && make && make install && \
     rm -rf /tmp/imagick && docker-php-ext-enable imagick
