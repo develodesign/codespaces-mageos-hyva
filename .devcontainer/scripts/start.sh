@@ -33,7 +33,7 @@ sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/nginx.conf" /etc/nginx/ngi
 sudo sed -i "s|__CODESPACES_REPO_ROOT__|${CODESPACES_REPO_ROOT}|g" /etc/nginx/nginx.conf
 sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/sp-php-fpm.conf" /etc/supervisor/conf.d/
 sudo sed -i "s|\$CODESPACES_REPO_ROOT|${CODESPACES_REPO_ROOT}|g" /etc/supervisor/conf.d/sp-php-fpm.conf
-sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/sp-redis.conf" /etc/supervisor/conf.d/
+sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/sp-valkey.conf" /etc/supervisor/conf.d/
 sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/mysql.conf" /etc/supervisor/conf.d/
 sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/sp-nginx.conf" /etc/supervisor/conf.d/
 sudo cp "${CODESPACES_REPO_ROOT}/.devcontainer/config/mysql.cnf" /etc/mysql/conf.d/
@@ -148,15 +148,15 @@ else
       --use-secure='1' \
       --base-url-secure="$url" \
       --use-secure-admin='1' \
-      --session-save='redis' \
-      --session-save-redis-host='127.0.0.1' \
-      --session-save-redis-port='6379' \
-      --cache-backend='redis' \
-      --cache-backend-redis-server='127.0.0.1' \
-      --cache-backend-redis-db='1' \
-      --page-cache='redis' \
-      --page-cache-redis-server='127.0.0.1' \
-      --page-cache-redis-db='2' \
+      --session-save='valkey' \
+      --session-save-valkey-host='127.0.0.1' \
+      --session-save-valkey-port='6379' \
+      --cache-backend='valkey' \
+      --cache-backend-valkey-server='127.0.0.1' \
+      --cache-backend-valkey-db='1' \
+      --page-cache='valkey' \
+      --page-cache-valkey-server='127.0.0.1' \
+      --page-cache-valkey-db='2' \
       --search-engine='opensearch' \
       --opensearch-host='localhost' \
       --opensearch-port='9200'
