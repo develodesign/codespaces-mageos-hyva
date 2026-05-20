@@ -21,6 +21,21 @@ show_ready_message() {
 }
 
 # ======================================================================================
+# Build the Hyvä theme CSS
+# ======================================================================================
+# We invoke the Tailwind build via npm directly instead of
+# "n98-magerun2 dev:theme:build-hyva". That command forces TTY mode on its npm
+# subprocess (failing with "TTY mode requires /dev/tty" in non-interactive
+# container startup) and, without -p, runs Tailwind in watch mode which never
+# returns. Running "npm run build" produces the same minified styles.css.
+HYVA_TAILWIND_DIR="vendor/hyva-themes/magento2-default-theme/web/tailwind"
+build_hyva_assets() {
+  echo "Building Hyvä theme CSS (Tailwind)..."
+  npm --prefix "${HYVA_TAILWIND_DIR}" install --no-audit --no-fund
+  npm --prefix "${HYVA_TAILWIND_DIR}" run build
+}
+
+# ======================================================================================
 # Supervisor Services (Nginx, MariaDB, Redis)
 # ======================================================================================
 echo "Configuring Supervisor services..."
@@ -48,8 +63,7 @@ source "${CODESPACES_REPO_ROOT}/.devcontainer/scripts/start_services.sh"
 if [ -f ".devcontainer/db-installed.flag" ]; then
   echo "${PLATFORM_NAME} already installed, skipping installation/import."
   if [ "${HYVA_LICENCE_KEY}" ]; then
-    echo "Building Hyvä theme assets..."
-    n98-magerun2 dev:theme:build-hyva frontend/Hyva/default
+    build_hyva_assets
     echo "Hyvä theme configured successfully"
   fi;
   show_ready_message
@@ -114,10 +128,14 @@ else
     if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
         echo "============ Installing Sample Data =========="
         echo "**** Deploying ${PLATFORM_NAME} sample data ****"
+        # Require the sample data modules and install them via composer. We do
+        # NOT run "bin/magento sampledata:deploy" here: it bootstraps Magento
+        # before the app is installed (no env.php / empty generated/) and exits
+        # non-zero on PHP 8.4, aborting the script under "set -e". The composer
+        # require + update below pulls the same packages, and the sample data is
+        # loaded into the DB by setup:upgrade after setup:install.
         ${COMPOSER_COMMAND} require ${PLATFORM_NAME}/module-bundle-sample-data ${PLATFORM_NAME}/module-widget-sample-data ${PLATFORM_NAME}/module-theme-sample-data ${PLATFORM_NAME}/module-catalog-sample-data ${PLATFORM_NAME}/module-customer-sample-data ${PLATFORM_NAME}/module-cms-sample-data ${PLATFORM_NAME}/module-catalog-rule-sample-data ${PLATFORM_NAME}/module-sales-rule-sample-data ${PLATFORM_NAME}/module-review-sample-data ${PLATFORM_NAME}/module-tax-sample-data ${PLATFORM_NAME}/module-sales-sample-data ${PLATFORM_NAME}/module-grouped-product-sample-data ${PLATFORM_NAME}/module-downloadable-sample-data ${PLATFORM_NAME}/module-msrp-sample-data ${PLATFORM_NAME}/module-configurable-sample-data ${PLATFORM_NAME}/module-product-links-sample-data ${PLATFORM_NAME}/module-wishlist-sample-data ${PLATFORM_NAME}/module-swatches-sample-data --no-update
-        
-        php -d memory_limit=-1 bin/magento sampledata:deploy
-        ${COMPOSER_COMMAND} update 
+        ${COMPOSER_COMMAND} update
         echo "**** Sample data deployed successfully ****"
     fi
 
@@ -224,7 +242,7 @@ if [ "${HYVA_LICENCE_KEY}" ]; then
   echo "Final Hyvä theme configuration..."
 
   # Build Hyva theme assets
-  n98-magerun2 dev:theme:build-hyva frontend/Hyva/default
+  build_hyva_assets
 
   # Deploy static content for Hyva theme
   echo "Deploying static content for Hyvä theme..."

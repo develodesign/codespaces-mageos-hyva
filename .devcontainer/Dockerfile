@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y \
     libmcrypt-dev \
     supervisor \
     nginx \
-    \
+    locales \
     zip \
     unzip \
     git \
@@ -46,6 +46,14 @@ RUN apt-get update && apt-get install -y \
     libmagickwand-dev \
     vim \
     sudo
+
+# Generate the en_US.UTF-8 locale (the Codespaces env sets LANG=en_US.UTF-8,
+# and Valkey 8 fatally exits if that locale is not available)
+RUN sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && \
+    locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
 
 # Install PHP extensions required for Magento
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
