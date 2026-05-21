@@ -32,7 +32,10 @@ HYVA_TAILWIND_DIR="vendor/hyva-themes/magento2-default-theme/web/tailwind"
 build_hyva_assets() {
   echo "Building Hyvä theme CSS (Tailwind)..."
   npm --prefix "${HYVA_TAILWIND_DIR}" install --no-audit --no-fund
-  npm --prefix "${HYVA_TAILWIND_DIR}" run build
+  # Tailwind v4's loader triggers Node's DEP0205 (module.register) deprecation
+  # warning on recent Node releases. It is harmless noise during a one-off CSS
+  # build, so silence deprecation warnings for this subprocess only.
+  NODE_OPTIONS="--no-deprecation" npm --prefix "${HYVA_TAILWIND_DIR}" run build
 }
 
 # ======================================================================================
@@ -134,7 +137,12 @@ else
         # non-zero on PHP 8.4, aborting the script under "set -e". The composer
         # require + update below pulls the same packages, and the sample data is
         # loaded into the DB by setup:upgrade after setup:install.
-        ${COMPOSER_COMMAND} require ${PLATFORM_NAME}/module-bundle-sample-data ${PLATFORM_NAME}/module-widget-sample-data ${PLATFORM_NAME}/module-theme-sample-data ${PLATFORM_NAME}/module-catalog-sample-data ${PLATFORM_NAME}/module-customer-sample-data ${PLATFORM_NAME}/module-cms-sample-data ${PLATFORM_NAME}/module-catalog-rule-sample-data ${PLATFORM_NAME}/module-sales-rule-sample-data ${PLATFORM_NAME}/module-review-sample-data ${PLATFORM_NAME}/module-tax-sample-data ${PLATFORM_NAME}/module-sales-sample-data ${PLATFORM_NAME}/module-grouped-product-sample-data ${PLATFORM_NAME}/module-downloadable-sample-data ${PLATFORM_NAME}/module-msrp-sample-data ${PLATFORM_NAME}/module-configurable-sample-data ${PLATFORM_NAME}/module-product-links-sample-data ${PLATFORM_NAME}/module-wishlist-sample-data ${PLATFORM_NAME}/module-swatches-sample-data --no-update
+        # NOTE: ${PLATFORM_NAME}/sample-data-media is REQUIRED here. The sample-data
+        # modules ship only CSV fixtures + code; the actual product/CMS images live in
+        # the sample-data-media package (it is merely "suggest"ed by module-sample-data,
+        # so it is never pulled in automatically). Without it the catalog import cannot
+        # read pub/media/catalog/product and aborts, leaving most categories empty.
+        ${COMPOSER_COMMAND} require ${PLATFORM_NAME}/module-bundle-sample-data ${PLATFORM_NAME}/module-widget-sample-data ${PLATFORM_NAME}/module-theme-sample-data ${PLATFORM_NAME}/module-catalog-sample-data ${PLATFORM_NAME}/module-customer-sample-data ${PLATFORM_NAME}/module-cms-sample-data ${PLATFORM_NAME}/module-catalog-rule-sample-data ${PLATFORM_NAME}/module-sales-rule-sample-data ${PLATFORM_NAME}/module-review-sample-data ${PLATFORM_NAME}/module-tax-sample-data ${PLATFORM_NAME}/module-sales-sample-data ${PLATFORM_NAME}/module-grouped-product-sample-data ${PLATFORM_NAME}/module-downloadable-sample-data ${PLATFORM_NAME}/module-msrp-sample-data ${PLATFORM_NAME}/module-configurable-sample-data ${PLATFORM_NAME}/module-product-links-sample-data ${PLATFORM_NAME}/module-wishlist-sample-data ${PLATFORM_NAME}/module-swatches-sample-data ${PLATFORM_NAME}/sample-data-media --no-update
         ${COMPOSER_COMMAND} update
         echo "**** Sample data deployed successfully ****"
     fi
@@ -142,7 +150,7 @@ else
    # Decide whether to run a fresh install or import a database
    if [ "${INSTALL_MAGENTO}" = "YES" ]; then
     echo "============ Installing New ${PLATFORM_NAME} Instance ============"
-    mysql -u root -p${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS magento2;"
+    mariadb -u root -p${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS magento2;"
 
     url="https://${CODESPACE_NAME}-8080.app.github.dev/"
     echo "Installing ${PLATFORM_NAME} with URL: $url"
@@ -181,8 +189,31 @@ else
 
     # Run setup:upgrade if sample data was installed
     if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
+      # The catalog product import reads images from pub/media/catalog/product, so the
+      # sample-data media MUST be staged (and readable) BEFORE setup:upgrade runs the
+      # import. Otherwise it fails with "File directory 'pub/media/catalog/product' is
+      # not readable" and only a handful of products are created.
+      SAMPLE_MEDIA_SOURCE="vendor/${PLATFORM_NAME}/sample-data-media"
+      mkdir -p pub/media/catalog/product
+      if [ -d "$SAMPLE_MEDIA_SOURCE" ]; then
+        echo "Staging sample data media into pub/media before import..."
+        rsync -a "${SAMPLE_MEDIA_SOURCE}/" pub/media/
+      else
+        echo "WARNING: ${SAMPLE_MEDIA_SOURCE} not found - product/CMS images will be missing."
+      fi
+      chmod -R a+rX pub/media
+
+      # The Media Gallery cms_*_save_after observers try to link every <img> in the
+      # sample-data CMS blocks/pages to a media_gallery_asset row. That table is only
+      # populated asynchronously by media-gallery:sync, so during import every image
+      # logs a critical "There is no such media asset" exception. Disable the media
+      # gallery for the import to silence them; it is re-enabled immediately after.
+      php -d memory_limit=-1 bin/magento config:set system/media_gallery/enabled 0
+
       echo "============ Running setup:upgrade to install sample data =========="
       php -d memory_limit=-1 bin/magento setup:upgrade
+
+      php -d memory_limit=-1 bin/magento config:set system/media_gallery/enabled 1
     fi
 
     if [ "${HYVA_LICENCE_KEY}" ] && [ "${HYVA_PROJECT_NAME}" ]; then
@@ -288,23 +319,15 @@ fi;
 
 
 # ======================================================================================
-# Fix for missing sample data media files
+# Post-import media processing
 # ======================================================================================
-if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
-    SAMPLE_MEDIA_SOURCE="vendor/${PLATFORM_NAME}/sample-data-media"
-    MEDIA_DEST="pub/media"
-
-    if [ -d "$SAMPLE_MEDIA_SOURCE" ] && [ -w "$MEDIA_DEST" ]; then
-        echo "Found sample data media. Copying to pub/media..."
-        rsync -a "${SAMPLE_MEDIA_SOURCE}/" "${MEDIA_DEST}/"
-        
-        if [ -f "bin/magento" ]; then
-            echo "Resizing product images and flushing cache..."
-            php -d memory_limit=-1 bin/magento catalog:image:resize
-            php -d memory_limit=-1 bin/magento cache:flush
-            echo "Sample data media fix applied."
-        fi
-    else
-        echo "Sample data media source not found or pub/media not writable. Skipping fix."
-    fi
+# Sample data media is now staged into pub/media BEFORE setup:upgrade (see above), so
+# here we only need to generate the resized product image cache and populate the media
+# gallery index, then flush caches.
+if [ "${INSTALL_SAMPLE_DATA}" = "YES" ] && [ -f "bin/magento" ]; then
+    echo "Resizing product images and syncing the media gallery..."
+    php -d memory_limit=-1 bin/magento catalog:image:resize
+    php -d memory_limit=-1 bin/magento media-gallery:sync || true
+    php -d memory_limit=-1 bin/magento cache:flush
+    echo "Sample data media processing complete."
 fi
