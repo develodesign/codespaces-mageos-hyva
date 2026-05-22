@@ -20,7 +20,7 @@ fi
 
 # Wait for MariaDB
 echo "Waiting for MySQL to be ready..."
-if ! timeout 60 bash -c 'until sudo mysqladmin ping --silent; do echo "Waiting..." && sleep 2; done'; then
+if ! timeout 60 bash -c 'until sudo mariadb-admin ping --silent; do echo "Waiting..." && sleep 2; done'; then
     echo "Error: MySQL did not become available within 60 seconds."
     exit 1
 fi
@@ -28,11 +28,11 @@ echo "MySQL is ready!"
 
 # Configure MySQL root user with password
 echo "Configuring MySQL root user..."
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; FLUSH PRIVILEGES;" 2>/dev/null || true
+sudo mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; FLUSH PRIVILEGES;" 2>/dev/null || true
 
 # Grant root access from any host for PHPMyAdmin
 echo "Granting MySQL root access from any host..."
-sudo mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" 2>/dev/null || true
+sudo mariadb -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" 2>/dev/null || true
 
 # Wait for OpenSearch
 echo "Waiting for OpenSearch to be ready..."

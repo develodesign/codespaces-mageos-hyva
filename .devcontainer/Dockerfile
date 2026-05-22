@@ -1,5 +1,6 @@
-# Use the "bullseye" based PHP image
-FROM php:8.3-fpm-bullseye
+# Use the "bookworm" based PHP image
+# PHP 8.5 is supported by Mage-OS 3.0.0 / Magento 2.4.9 (framework requires ~8.3 || ~8.4 || ~8.5)
+FROM php:8.5-fpm-bookworm
 
 # Environment variables to allow non-interactive installation
 ENV MYSQL_ROOT_PASSWORD=password
@@ -29,7 +30,7 @@ RUN apt-get update && apt-get install -y \
     libmcrypt-dev \
     supervisor \
     nginx \
-    redis-server \
+    locales \
     zip \
     unzip \
     git \
@@ -47,6 +48,14 @@ RUN apt-get update && apt-get install -y \
     vim \
     sudo
 
+# Generate the en_US.UTF-8 locale (the Codespaces env sets LANG=en_US.UTF-8,
+# and Valkey 8 fatally exits if that locale is not available)
+RUN sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && \
+    locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+
 # Install PHP extensions required for Magento
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-install -j$(nproc) \
@@ -63,38 +72,40 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-x
         ftp \
         xsl
 
-# Install additional PHP extensions via PECL
-RUN pecl install imagick redis xdebug && \
-    docker-php-ext-enable imagick redis xdebug
+# Install imagick from source (builds cleanly against current PHP; the released
+# PECL tarball has historically lagged new PHP versions)
+RUN git clone https://github.com/Imagick/imagick --depth 1 /tmp/imagick && \
+    cd /tmp/imagick && phpize && ./configure && make && make install && \
+    rm -rf /tmp/imagick && docker-php-ext-enable imagick
+RUN pecl install redis xdebug && docker-php-ext-enable redis xdebug
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install MariaDB Server 10.6 (for Magento 2.4 compatibility)
+# Install MariaDB Server 11.4 (for Magento 2.4.9 compatibility)
 RUN apt-get update && apt-get install -y software-properties-common dirmngr \
     && curl -LsSO https://downloads.mariadb.com/MariaDB/mariadb_repo_setup \
     && chmod +x mariadb_repo_setup \
-    && ./mariadb_repo_setup --mariadb-server-version="10.6" \
+    && ./mariadb_repo_setup --mariadb-server-version="11.4" \
     && apt-get update \
-    && echo "mariadb-server-10.6 mysql-server/root_password password ${MYSQL_ROOT_PASSWORD}" | debconf-set-selections \
-    && echo "mariadb-server-10.6 mysql-server/root_password_again password ${MYSQL_ROOT_PASSWORD}" | debconf-set-selections \
+    && echo "mariadb-server-11.4 mysql-server/root_password password ${MYSQL_ROOT_PASSWORD}" | debconf-set-selections \
+    && echo "mariadb-server-11.4 mysql-server/root_password_again password ${MYSQL_ROOT_PASSWORD}" | debconf-set-selections \
     && apt-get install -y mariadb-server mariadb-client \
     && mkdir -p /var/run/mysqld \
     && chown mysql:mysql /var/run/mysqld \
     && rm mariadb_repo_setup
 
+# Install Valkey 8 (Redis-compatible cache/session store for Magento 2.4.9)
+RUN echo "deb http://deb.debian.org/debian bookworm-backports main" > /etc/apt/sources.list.d/backports.list && \
+    apt-get update && apt-get install -y -t bookworm-backports valkey-server
+
 # Install Node.js and npm
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && \
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
     apt-get install -y nodejs
 
 # Install Java, a dependency for OpenSearch
 RUN apt-get update && apt-get install -y openjdk-17-jdk-headless
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-
-# Prepare for OpenSearch installation by adding the repository and key
-RUN curl -o- https://artifacts.opensearch.org/publickeys/opensearch.pgp | gpg --dearmor --batch --yes -o /usr/share/keyrings/opensearch-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/opensearch-keyring.gpg] https://artifacts.opensearch.org/releases/bundle/opensearch/2.x/apt stable main" | tee /etc/apt/sources.list.d/opensearch-2.x.list && \
-    apt-get update
 
 # Install n98-magerun2
 RUN wget https://files.magerun.net/n98-magerun2.phar && \

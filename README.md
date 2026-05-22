@@ -4,22 +4,22 @@ A complete GitHub Codespaces development setup for Mage-OS (Magento Open Source)
 
 ## Stack
 
-- **PHP**: 8.3-FPM
+- **PHP**: 8.5-FPM
 - **Web Server**: Nginx
-- **Database**: MariaDB 10.6
+- **Database**: MariaDB 11.4
 - **Search**: OpenSearch 2.19.2
-- **Cache**: Redis
+- **Cache & Sessions**: Valkey 8 (Redis-compatible)
 - **Mail Testing**: Mailpit
-- **Node.js**: 18.x
+- **Node.js**: 20.x (upgraded to the latest release at startup via `n`)
 - **Database Management**: phpMyAdmin
-- **Magento Version**: MageOs 2.0 | Magento 2.4.7-p5
+- **Platform Version**: Mage-OS 3.0 | Magento 2.4.9
 - **Theme**: Hyvä
 
 ## Features
 
 - **Flexible Platform Installation**: Choose between Mage-OS or Magento via `PLATFORM_NAME` Env value
 - **Sample Data Installation**: Optional sample data installation via `INSTALL_SAMPLE_DATA` flag
-- Pre-configured services (Nginx, MariaDB, Redis, OpenSearch)
+- Pre-configured services (Nginx, MariaDB, Valkey, OpenSearch)
 - Hyvä theme build automation
 - Docker-in-Docker support for additional containers (Mailpit, OpenSearch, phpMyAdmin)
 - n98-magerun2 CLI tool pre-installed
@@ -53,7 +53,7 @@ A complete GitHub Codespaces development setup for Mage-OS (Magento Open Source)
    - Starts Docker containers (Mailpit, OpenSearch, phpMyAdmin)
 
    **Phase 2 - Application Setup** (`start.sh` via `postAttachCommand`):
-   - Configures and starts Supervisor services (Nginx, MariaDB, Redis, PHP-FPM)
+   - Configures and starts Supervisor services (Nginx, MariaDB, Valkey, PHP-FPM)
    - Installs Node.js using `n` package manager
    - Creates project using `composer create-project`:
      - **If `PLATFORM_NAME=mage-os`**: Installs Mage-OS from https://repo.mage-os.org/
@@ -86,7 +86,7 @@ A complete GitHub Codespaces development setup for Mage-OS (Magento Open Source)
 | Nginx | 8080 | Magento web interface |
 | MariaDB | 3306 | Database server |
 | phpMyAdmin | 8081 | Database management UI |
-| Redis | 6379 | Cache and session storage |
+| Valkey | 6379 | Cache and session storage (Redis-compatible) |
 | OpenSearch | 9200 | Search engine API |
 | OpenSearch Node | 9600 | OpenSearch node communication |
 | Mailpit SMTP | 1025 | Mail SMTP server |
@@ -142,8 +142,8 @@ docker logs phpmyadmin
 
 ### Database Access
 ```bash
-# MySQL CLI access
-mysql -u root -ppassword magento2
+# Database CLI access (use the mariadb client; the legacy `mysql` name is deprecated)
+mariadb -u root -ppassword magento2
 
 # Or use n98-magerun2
 n98-magerun2 db:console
@@ -162,7 +162,7 @@ Key configuration files are located in `.devcontainer/`:
 - `mysql.cnf` - MariaDB server configuration
 - `mysql.conf` - MariaDB supervisor configuration
 - `client.cnf` - MySQL client configuration
-- `sp-redis.conf` - Redis supervisor configuration
+- `sp-valkey.conf` - Valkey supervisor configuration
 - `sp-nginx.conf` - Nginx supervisor configuration
 - `sp-opensearch.conf` - OpenSearch supervisor configuration (if used)
 - `env.php` - Pre-configured Magento environment file (for existing installations)
@@ -194,10 +194,10 @@ Re-run start script
 ### Database Connection Issues
 Verify MariaDB is running:
 ```bash
-sudo mysqladmin ping
+sudo mariadb-admin ping
 ```
 
-Check MySQL logs:
+Check MariaDB logs:
 ```bash
 sudo tail -f /var/log/mysql/error.log
 ```
@@ -233,7 +233,7 @@ Then restart the Codespace. The `start.sh` script will detect the missing flag a
 - Hyvä theme configuration
 - All setup steps from scratch
 
-**Note**: The flag file is created at the end of `start.sh` (line 141) to prevent reinstallation on subsequent container restarts.
+**Note**: The flag file is created near the end of `start.sh` to prevent reinstallation on subsequent container restarts.
 
 ## Development Workflow
 
@@ -247,7 +247,7 @@ Then restart the Codespace. The `start.sh` script will detect the missing flag a
 
 - The first startup may take 10-15 minutes as it installs Magento and all dependencies (Enable Pre-builds to cut new installs to 5mins)
 - Subsequent instance starts are much faster (2-3 minutes) as the `.devcontainer/db-installed.flag` prevents reinstallation
-- The environment uses Redis for sessions, cache, and full page cache
+- The environment uses Valkey (a Redis-compatible store) for sessions, cache, and full page cache
 - OpenSearch runs in a Docker container with security disabled for development ease
 - Xdebug is installed but not enabled by default
 - Awesome Claude Agents are automatically cloned and installed to `~/.claude/agents`
@@ -277,10 +277,11 @@ By default, this environment installs **Mage-OS** (set via `PLATFORM_NAME=mage-o
 **Note**: If using Mage-OS and you need Marketplace extensions, you'll need to configure `repo.magento.com` separately with appropriate credentials.
 
 ### Changing Magento Version
-Edit `.devcontainer/scripts/setup.php` and modify:
+Edit the `MAGENTO_VERSION` value under `containerEnv` in `.devcontainer/devcontainer.json`:
 ```json
-MAGENTO_VERSION="${MAGENTO_VERSION:=2.4.8-p3}"
+"MAGENTO_VERSION": "${localEnv:MAGENTO_VERSION:2.4.9}"
 ```
+This only applies when `PLATFORM_NAME=magento`; Mage-OS is installed from `repo.mage-os.org` and tracks its own release.
 
 ### Using an Existing Magento Database
 To skip fresh installation and use an existing database:
@@ -311,8 +312,11 @@ Sample data provides products, categories, and content for testing and developme
 - Sample CMS pages and blocks
 - Sample customers and reviews
 - Sample sales data and tax rules
+- Product and CMS media images (via the `${PLATFORM_NAME}/sample-data-media` package)
 
 **Note**: Sample data installation adds approximately 5-10 minutes to the initial setup time and requires additional disk space (~500MB).
+
+**Important**: The sample-data media package (`sample-data-media`) is required and staged into `pub/media` **before** `setup:upgrade` runs. The catalog import reads product images from `pub/media/catalog/product`; if the media is missing at import time the import aborts early and most categories end up empty. The Media Gallery is also temporarily disabled during the import to avoid noisy "no such media asset" exceptions while CMS sample blocks are saved.
 
 ### Environment Variables
 All environment variables can be customized in `.devcontainer/devcontainer.json` under `containerEnv`:
@@ -321,7 +325,7 @@ All environment variables can be customized in `.devcontainer/devcontainer.json`
 - `PLATFORM_NAME` - Set to "mage-os" for Mage-OS, "magento" for Magento (default: "mage-os")
 - `INSTALL_MAGENTO` - Set to "YES" for fresh install, "NO" to use existing database (default: "YES")
 - `INSTALL_SAMPLE_DATA` - Set to "YES" to install sample data, "NO" to skip (default: "YES")
-- `MAGENTO_VERSION` - Magento version to install when `PLATFORM_NAME=magento` (default: "2.4.8-p3")
+- `MAGENTO_VERSION` - Magento version to install when `PLATFORM_NAME=magento` (default: "2.4.9")
 - `MAGENTO_ADMIN_USERNAME` - Admin username (default: "admin")
 - `MAGENTO_ADMIN_PASSWORD` - Admin password (default: "password1")
 - `MAGENTO_ADMIN_EMAIL` - Admin email (default: "admin@example.com")

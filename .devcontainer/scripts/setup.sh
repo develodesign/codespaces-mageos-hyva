@@ -50,7 +50,7 @@ start_container $OPENSEARCH_CONTAINER \
     -e "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" \
     -e "DISABLE_INSTALL_DEMO_CONFIG=true" \
     -e "plugins.security.disabled=true" \
-    opensearchproject/opensearch:2.19.2
+    opensearchproject/opensearch:3.0.0
 
 # Start phpMyAdmin Container - connects to the main container via Docker bridge gateway
 start_container $PHPMYADMIN_CONTAINER \

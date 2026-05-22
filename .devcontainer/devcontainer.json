@@ -11,7 +11,7 @@
 	  "8080": { "label": "Mage-OS/Magento" },
       "8081": { "label": "PHP MyAdmin" },
 	  "3306": { "label": "MySQL" },
-	  "6379": { "label": "Redis" },
+	  "6379": { "label": "Valkey" },
 	  "1025": { "label": "Mailpit SMTP" },
 	  "8025": { "label": "Mailpit Web" },
 	  "9200": { "label": "OpenSearch" }
@@ -27,7 +27,7 @@
 		"HYVA_PROJECT_NAME": "${localEnv:HYVA_PROJECT_NAME:}",
 	    "MAGENTO_COMPOSER_AUTH_USER": "${localEnv:MAGENTO_COMPOSER_AUTH_USER:}",
 	    "MAGENTO_COMPOSER_AUTH_PASS": "${localEnv:MAGENTO_COMPOSER_AUTH_PASS:}",
-	    "MAGENTO_VERSION": "${localEnv:MAGENTO_VERSION:2.4.7-p5}",
+	    "MAGENTO_VERSION": "${localEnv:MAGENTO_VERSION:2.4.9}",
 	    "MAGENTO_ADMIN_USERNAME": "${localEnv:MAGENTO_ADMIN_USERNAME:admin}",
 	    "MAGENTO_ADMIN_PASSWORD": "${localEnv:MAGENTO_ADMIN_PASSWORD:password1}",
 	    "MAGENTO_ADMIN_EMAIL": "${localEnv:MAGENTO_ADMIN_EMAIL:admin@example.com}",
