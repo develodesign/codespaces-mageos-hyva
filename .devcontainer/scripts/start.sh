@@ -326,7 +326,6 @@ fi;
 # gallery index, then flush caches.
 if [ "${INSTALL_SAMPLE_DATA}" = "YES" ] && [ -f "bin/magento" ]; then
     echo "Resizing product images and syncing the media gallery..."
-    php -d memory_limit=-1 bin/magento catalog:image:resize
     php -d memory_limit=-1 bin/magento media-gallery:sync || true
     php -d memory_limit=-1 bin/magento cache:flush
     echo "Sample data media processing complete."
