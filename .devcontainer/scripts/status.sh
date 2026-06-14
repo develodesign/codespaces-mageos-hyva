@@ -3,7 +3,7 @@
 echo "============ Magento Codespace Status =========="
 
 echo "Services Status:"
-echo "- MySQL: $(sudo service mysql status | grep -q 'running' && echo 'Running' || echo 'Stopped')"
+echo "- Mariadb: $(pgrep -x mariadbd > /dev/null || pgrep -x mysqld > /dev/null && echo 'Running' || echo 'Stopped')"
 echo "- Nginx: $(sudo service nginx status | grep -q 'running' && echo 'Running' || echo 'Stopped')"
 echo "- Supervisor: $(sudo service supervisor status | grep -q 'running' && echo 'Running' || echo 'Stopped')"
 echo "- Valkey: $(valkey-cli ping 2>/dev/null || echo 'Not responding')"
