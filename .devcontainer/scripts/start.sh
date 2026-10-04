@@ -23,18 +23,10 @@ show_ready_message() {
 # ======================================================================================
 # Build the Hyvä theme CSS
 # ======================================================================================
-# We invoke the Tailwind build via npm directly instead of
-# "n98-magerun2 dev:theme:build-hyva". That command forces TTY mode on its npm
-# subprocess (failing with "TTY mode requires /dev/tty" in non-interactive
-# container startup) and, without -p, runs Tailwind in watch mode which never
-# returns. Running "npm run build" produces the same minified styles.css.
 HYVA_TAILWIND_DIR="vendor/hyva-themes/magento2-default-theme/web/tailwind"
 build_hyva_assets() {
   echo "Building Hyvä theme CSS (Tailwind)..."
   npm --prefix "${HYVA_TAILWIND_DIR}" install --no-audit --no-fund
-  # Tailwind v4's loader triggers Node's DEP0205 (module.register) deprecation
-  # warning on recent Node releases. It is harmless noise during a one-off CSS
-  # build, so silence deprecation warnings for this subprocess only.
   NODE_OPTIONS="--no-deprecation" npm --prefix "${HYVA_TAILWIND_DIR}" run build
 }
 
@@ -131,17 +123,6 @@ else
     if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
         echo "============ Installing Sample Data =========="
         echo "**** Deploying ${PLATFORM_NAME} sample data ****"
-        # Require the sample data modules and install them via composer. We do
-        # NOT run "bin/magento sampledata:deploy" here: it bootstraps Magento
-        # before the app is installed (no env.php / empty generated/) and exits
-        # non-zero on PHP 8.4, aborting the script under "set -e". The composer
-        # require + update below pulls the same packages, and the sample data is
-        # loaded into the DB by setup:upgrade after setup:install.
-        # NOTE: ${PLATFORM_NAME}/sample-data-media is REQUIRED here. The sample-data
-        # modules ship only CSV fixtures + code; the actual product/CMS images live in
-        # the sample-data-media package (it is merely "suggest"ed by module-sample-data,
-        # so it is never pulled in automatically). Without it the catalog import cannot
-        # read pub/media/catalog/product and aborts, leaving most categories empty.
         ${COMPOSER_COMMAND} require ${PLATFORM_NAME}/module-bundle-sample-data ${PLATFORM_NAME}/module-widget-sample-data ${PLATFORM_NAME}/module-theme-sample-data ${PLATFORM_NAME}/module-catalog-sample-data ${PLATFORM_NAME}/module-customer-sample-data ${PLATFORM_NAME}/module-cms-sample-data ${PLATFORM_NAME}/module-catalog-rule-sample-data ${PLATFORM_NAME}/module-sales-rule-sample-data ${PLATFORM_NAME}/module-review-sample-data ${PLATFORM_NAME}/module-tax-sample-data ${PLATFORM_NAME}/module-sales-sample-data ${PLATFORM_NAME}/module-grouped-product-sample-data ${PLATFORM_NAME}/module-downloadable-sample-data ${PLATFORM_NAME}/module-msrp-sample-data ${PLATFORM_NAME}/module-configurable-sample-data ${PLATFORM_NAME}/module-product-links-sample-data ${PLATFORM_NAME}/module-wishlist-sample-data ${PLATFORM_NAME}/module-swatches-sample-data ${PLATFORM_NAME}/sample-data-media --no-update
         ${COMPOSER_COMMAND} update
         echo "**** Sample data deployed successfully ****"
@@ -189,10 +170,6 @@ else
 
     # Run setup:upgrade if sample data was installed
     if [ "${INSTALL_SAMPLE_DATA}" = "YES" ]; then
-      # The catalog product import reads images from pub/media/catalog/product, so the
-      # sample-data media MUST be staged (and readable) BEFORE setup:upgrade runs the
-      # import. Otherwise it fails with "File directory 'pub/media/catalog/product' is
-      # not readable" and only a handful of products are created.
       SAMPLE_MEDIA_SOURCE="vendor/${PLATFORM_NAME}/sample-data-media"
       mkdir -p pub/media/catalog/product
       if [ -d "$SAMPLE_MEDIA_SOURCE" ]; then
@@ -202,12 +179,6 @@ else
         echo "WARNING: ${SAMPLE_MEDIA_SOURCE} not found - product/CMS images will be missing."
       fi
       chmod -R a+rX pub/media
-
-      # The Media Gallery cms_*_save_after observers try to link every <img> in the
-      # sample-data CMS blocks/pages to a media_gallery_asset row. That table is only
-      # populated asynchronously by media-gallery:sync, so during import every image
-      # logs a critical "There is no such media asset" exception. Disable the media
-      # gallery for the import to silence them; it is re-enabled immediately after.
       php -d memory_limit=-1 bin/magento config:set system/media_gallery/enabled 0
 
       echo "============ Running setup:upgrade to install sample data =========="
@@ -260,9 +231,9 @@ fi
   url="https://${CODESPACE_NAME}-8080.app.github.dev/"
   target="${CODESPACES_REPO_ROOT}/vendor/${PLATFORM_NAME}/framework/App/Response/HeaderProvider/XFrameOptions.php"
   sed -i "s|\$this->headerValue = \$xFrameOpt;|\$this->headerValue = '${url}';|" "$target"
-  # echo "Fetching Media Files"        
-  # ./mc cp wasabi/clients.bamford/bam_media.zip ${CODESPACES_REPO_ROOT}/bam_media.zip
-  # unzip -o ${CODESPACES_REPO_ROOT}/bam_media.zip -d ${CODESPACES_REPO_ROOT}/pub/ && rm ./bam_media.zip
+  # echo "Fetching Media Files e.g with Wasabi"        
+  # ./mc cp wasabi/clients.site/site_media.zip ${CODESPACES_REPO_ROOT}/site_media.zip
+  # unzip -o ${CODESPACES_REPO_ROOT}/site_media.zip -d ${CODESPACES_REPO_ROOT}/pub/ && rm ./site_media.zip
 fi
 
 show_ready_message
