@@ -316,17 +316,3 @@ fi;
   fi
 
   echo "File permissions updated successfully"
-
-
-# ======================================================================================
-# Post-import media processing
-# ======================================================================================
-# Sample data media is now staged into pub/media BEFORE setup:upgrade (see above), so
-# here we only need to generate the resized product image cache and populate the media
-# gallery index, then flush caches.
-if [ "${INSTALL_SAMPLE_DATA}" = "YES" ] && [ -f "bin/magento" ]; then
-    echo "Resizing product images and syncing the media gallery..."
-    php -d memory_limit=-1 bin/magento media-gallery:sync || true
-    php -d memory_limit=-1 bin/magento cache:flush
-    echo "Sample data media processing complete."
-fi
