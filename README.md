@@ -235,14 +235,6 @@ Then restart the Codespace. The `start.sh` script will detect the missing flag a
 
 **Note**: The flag file is created near the end of `start.sh` to prevent reinstallation on subsequent container restarts.
 
-## Development Workflow
-
-1. **Make code changes** in your IDE
-2. **Clear Magento cache** if needed: `bin/magento cache:flush`
-3. **Rebuild Hyvä theme** if template changes: `n98-magerun2 dev:theme:build-hyva`
-4. **Test changes** in your browser
-5. **Commit and push** to your repository
-
 ## Notes
 
 - The first startup may take 10-15 minutes as it installs Magento and all dependencies (Enable Pre-builds to cut new installs to 5mins)
